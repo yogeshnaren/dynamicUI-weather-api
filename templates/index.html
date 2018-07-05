@@ -1,0 +1,312 @@
+{% load static %}
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+<script type = "text/javascript">
+	
+  var res, i;
+	var maxobj = [];
+  var minobj = [];
+
+  $(function() 
+  {
+	$("#datepicker").datepicker();
+	});
+
+	$(document).on('submit','#weather_form',function(i)
+	{
+		i.preventDefault();
+
+	$.ajax(
+	{
+			type: 'GET',
+			url: '/forecast/'+getDate(),
+			success:function(response)
+			{
+				console.log(response);
+				if(response.length > 0)
+				{
+					res = response;
+					showData();
+				}
+			}
+		})
+	});
+
+	function getDate()
+	{
+	var a = $("#datepicker").val().split("/");
+	return a[2]+a[0]+a[1];	
+	}
+
+
+	function showData()
+  {
+    var len = res.length;
+    for(i=0;i<len;i++)
+    { 
+      xaxis = convertToDate(res[i].DATE);
+      yaxis = Number(res[i].TMAX);     
+      zaxis = Number(res[i].TMIN); 
+      maxobj.push(
+      {
+        label: xaxis,
+        y: yaxis
+      });
+      minobj.push(
+      {
+        label: xaxis,
+        y: zaxis
+      });
+    }
+    var chart = new CanvasJS.Chart("forecastLabel", 
+    {
+      theme: "dark1", 
+      animationEnabled: true,
+      title:
+      {
+        text: "Temperature Graph"
+      },
+      legend:
+      {
+        cursor: "pointer",
+        fontSize: 16,
+        itemclick: toggleDataSeries
+      },
+      toolTip:
+      {
+        shared: true
+      },
+      data: 
+      [
+        {
+          name: "Max Temperature",
+          type: "spline",
+          yValueFormatString: "#0.## °C",
+          showInLegend: true,
+          dataPoints: maxobj
+
+        },
+        {
+          name: "Min Temperature",
+          type: "spline",
+          yValueFormatString: "#0.## °C",
+          showInLegend: true,
+          dataPoints: minobj
+        }
+      ]
+    });
+    
+    chart.render();
+
+    $("#forecastLabel").removeClass('hide')
+
+    function toggleDataSeries(e)
+    {
+    if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) 
+    {
+      e.dataSeries.visible = false;
+    }
+    else
+    {
+      e.dataSeries.visible = true;
+    }
+    chart.render();
+  }
+
+  }
+
+	function convertToDate(input)
+  {
+		var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+		console.log(input.substring(4,6)-1)
+		return months[input.substring(4,6)-1] + ' ' + input.substring(6,8) + ' , ' + input.substring(0,4)
+	}
+
+</script>
+
+<title> Weather Forecast </title>
+
+<style>
+
+@import url(https://fonts.googleapis.com/css?family=Roboto:400,500,700,300,100);
+
+body {
+  background-color: #3e94ec;
+  font-family: "Roboto", helvetica, arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  text-rendering: optimizeLegibility;
+}
+
+div.table-title {
+   display: block;
+  margin: auto;
+  max-width: 600px;
+  padding:5px;
+  width: 100%;
+}
+
+.custom.table-title h3 {
+   color: #fafafa;
+   font-size: 30px;
+   font-weight: 400;
+   font-style:normal;
+   font-family: "Roboto", helvetica, arial, sans-serif;
+   text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1);
+   text-transform:uppercase;
+}
+
+
+/*** Table Styles **/
+
+.custom .table-fill {
+  background: white;
+  border-radius:3px;
+  border-collapse: collapse;
+  height: 320px;
+  margin: auto;
+  max-width: 600px;
+  padding:5px;
+  width: 100%;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  animation: float 5s infinite;
+}
+ 
+.custom th , h2 {
+  color:#D5DDE5;;
+  background:#1b1e24;
+  border-bottom:4px solid #9ea7af;
+  border-right: 1px solid #343a45;
+  font-size:23px;
+  font-weight: 100;
+  padding:24px;
+  text-align:left;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  vertical-align:middle;
+}
+
+.custom th:first-child {
+  border-top-left-radius:3px;
+}
+ 
+.custom th:last-child {
+  border-top-right-radius:3px;
+  border-right:none;
+}
+  
+.custom tr {
+  border-top: 1px solid #C1C3D1;
+  border-bottom-: 1px solid #C1C3D1;
+  color:#666B85;
+  font-size:16px;
+  font-weight:normal;
+  text-shadow: 0 1px 1px rgba(256, 256, 256, 0.1);
+}
+ 
+.custom tr:hover td {
+  background:#4E5066;
+  color:#FFFFFF;
+  border-top: 1px solid #22262e;
+}
+ 
+.custom tr:first-child {
+  border-top:none;
+}
+
+.custom tr:last-child {
+  border-bottom:none;
+}
+ 
+.custom tr:nth-child(odd) td {
+  background:#EBEBEB;
+}
+ 
+.custom tr:nth-child(odd):hover td {
+  background:#4E5066;
+}
+
+.custom tr:last-child td:first-child {
+  border-bottom-left-radius:3px;
+}
+ 
+.custom tr:last-child td:last-child {
+  border-bottom-right-radius:3px;
+}
+ 
+.custom td {
+  background:#FFFFFF;
+  padding:20px;
+  text-align:left;
+  vertical-align:middle;
+  font-weight:300;
+  font-size:18px;
+  text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid #C1C3D1;
+}
+
+.custom td:last-child {
+  border-right: 0px;
+}
+
+.custom th.text-left {
+  text-align: left;
+}
+
+.custom th.text-center {
+  text-align: center;
+}
+
+.custom th.text-right {
+  text-align: right;
+}
+
+.custom td.text-left {
+  text-align: left;
+}
+
+.custom td.text-center {
+  text-align: center;
+}
+
+.custom td.text-right {
+  text-align: right;
+}
+
+.hide{
+	display:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+ <h2> Weather Forecast </h2>
+
+<table class="custom" style="margin-top: 250px; margin-left: 25px; float: left">
+	<tbody>
+	<form id="weather_form"> {% csrf_token %}
+	<tr><td colspan="4">Date   : <input type ="datepicker" id="datepicker" value="" placeholder="Pick Date" name="date" /> <input style="margin-left:15px" type="submit" value="SUBMIT" /></td></tr>
+	<form>
+	</tbody>
+</table>
+
+<div class="table-title custom" style="margin-left: 250px; float: left; height: 300px; width:120%">
+	<h3 class='hide' id="forecastLabel"> Forecast for next 5 days</h3>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"> </script>
+	<div id="weatherDetails">
+	</div>
+</div>
+</body>
+</html>
